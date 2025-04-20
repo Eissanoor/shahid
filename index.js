@@ -3,7 +3,7 @@ const dotenv = require('dotenv');
 const cors = require('cors');
 const path = require('path');
 const connectDB = require('./config/db');
-
+const compression = require('compression');
 // Load env vars
 dotenv.config();
 
@@ -15,6 +15,9 @@ const userRoutes = require('./routes/userRoutes');
 const megaMenuRoutes = require('./routes/megaMenuRoutes');
 
 const app = express();
+
+// Compress all responses
+app.use(compression());
 
 // Body parser
 app.use(express.json());
