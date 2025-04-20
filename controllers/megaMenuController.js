@@ -28,7 +28,7 @@ exports.createMegaMenu = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      data: megaMenu
+      message: 'MegaMenu created successfully'
     });
   } catch (error) {
     res.status(400).json({
@@ -100,6 +100,21 @@ exports.updateMegaMenu = async (req, res) => {
 
     // Update with file if provided
     if (req.file) {
+      // Extract public_id from the existing image URL if it exists
+      if (megaMenu.pic) {
+        try {
+          // Get public_id from URL
+          const publicId = megaMenu.pic.split('/').pop().split('.')[0];
+          if (publicId) {
+            // Delete the old image from Cloudinary
+            await cloudinary.uploader.destroy(`megamenu/${publicId}`);
+          }
+        } catch (err) {
+          console.log('Error deleting old image:', err);
+          // Continue even if deletion fails
+        }
+      }
+
       // Upload new image to Cloudinary
       const result = await cloudinary.uploader.upload(req.file.path, {
         folder: 'megamenu',
@@ -125,7 +140,7 @@ exports.updateMegaMenu = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      data: megaMenu
+      message: 'MegaMenu updated successfully'
     });
   } catch (error) {
     res.status(400).json({
@@ -149,11 +164,28 @@ exports.deleteMegaMenu = async (req, res) => {
       });
     }
 
+    // Delete the image from Cloudinary if it exists
+    if (megaMenu.pic) {
+      try {
+        // Extract public_id from the URL
+        const publicId = megaMenu.pic.split('/').pop().split('.')[0];
+        if (publicId) {
+          // Delete the image from Cloudinary
+          await cloudinary.uploader.destroy(`megamenu/${publicId}`);
+          console.log(`Deleted image from Cloudinary: megamenu/${publicId}`);
+        }
+      } catch (err) {
+        console.log('Error deleting image from Cloudinary:', err);
+        // Continue with deletion even if Cloudinary deletion fails
+      }
+    }
+
+    // Delete the megamenu item from database
     await megaMenu.deleteOne();
 
     res.status(200).json({
       success: true,
-      data: {}
+      message: 'MegaMenu deleted successfully'
     });
   } catch (error) {
     res.status(400).json({
