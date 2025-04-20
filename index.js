@@ -13,6 +13,7 @@ connectDB();
 // Route files
 const userRoutes = require('./routes/userRoutes');
 const megaMenuRoutes = require('./routes/megaMenuRoutes');
+const productRoutes = require('./routes/productRoutes');
 
 const app = express();
 
@@ -30,6 +31,7 @@ app.use(cors());
 // Mount routers
 app.use('/api/users', userRoutes);
 app.use('/api/megamenu', megaMenuRoutes);
+app.use('/api/products', productRoutes);
 
 // Basic route for testing
 app.get('/', (req, res) => {
