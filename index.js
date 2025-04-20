@@ -25,14 +25,7 @@ app.use(express.json());
 // Enable CORS
 app.use(cors());
 
-// Set static folder for uploads
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
-// Create uploads directory if it doesn't exist
-const fs = require('fs');
-if (!fs.existsSync('./uploads')) {
-  fs.mkdirSync('./uploads');
-}
+// No need for local uploads directory since we're using Cloudinary
 
 // Mount routers
 app.use('/api/users', userRoutes);

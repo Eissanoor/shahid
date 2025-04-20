@@ -1,5 +1,5 @@
 const MegaMenu = require('../models/MegaMenu');
-const path = require('path');
+const cloudinary = require('../config/cloudinary');
 
 // @desc    Create new megamenu item
 // @route   POST /api/megamenu
@@ -14,10 +14,16 @@ exports.createMegaMenu = async (req, res) => {
       });
     }
 
-    // Create megamenu with picture path
+    // Upload image to Cloudinary
+    const result = await cloudinary.uploader.upload(req.file.path, {
+      folder: 'megamenu',
+      use_filename: true
+    });
+
+    // Create megamenu with Cloudinary URL
     const megaMenu = await MegaMenu.create({
       name: req.body.name,
-      pic: `/uploads/${req.file.filename}`
+      pic: result.secure_url
     });
 
     res.status(201).json({
@@ -94,11 +100,17 @@ exports.updateMegaMenu = async (req, res) => {
 
     // Update with file if provided
     if (req.file) {
+      // Upload new image to Cloudinary
+      const result = await cloudinary.uploader.upload(req.file.path, {
+        folder: 'megamenu',
+        use_filename: true
+      });
+
       megaMenu = await MegaMenu.findByIdAndUpdate(
         req.params.id,
         {
           name: req.body.name,
-          pic: `/uploads/${req.file.filename}`
+          pic: result.secure_url
         },
         { new: true, runValidators: true }
       );
