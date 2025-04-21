@@ -15,8 +15,10 @@ exports.createOrder = async (req, res) => {
       });
     }
 
-    // Calculate total amount
+    // Calculate total amount and collect product details
     let totalAmount = 0;
+    let receiptItems = [];
+
     for (const item of products) {
       const product = await Product.findById(item.product);
       if (!product) {
@@ -25,19 +27,44 @@ exports.createOrder = async (req, res) => {
           error: `Product not found: ${item.product}`
         });
       }
-      totalAmount += product.price * item.quantity;
+      
+      const itemTotal = product.price * item.quantity;
+      totalAmount += itemTotal;
+      
+      // Add product details to receipt items
+      receiptItems.push({
+        productId: product._id,
+        name: product.name,
+        price: product.price,
+        quantity: item.quantity,
+        type: product.type,
+        itemTotal: itemTotal
+      });
     }
 
     // Create order
     const order = await Order.create({
       products,
-      totalAmount
+      totalAmount,
+      
     });
+
+    // Generate receipt data
+    const receiptData = {
+      receiptNumber: `RCP-${order._id.toString().slice(-6).toUpperCase()}`,
+      date: new Date().toISOString(),
+      items: receiptItems,
+      subtotal: totalAmount,
+      total: totalAmount,
+     
+      orderStatus: order.status,
+      orderReference: order._id
+    };
 
     res.status(201).json({
       success: true,
       message: 'Order created successfully',
-      data: order
+      receipt: receiptData
     });
   } catch (error) {
     res.status(400).json({
