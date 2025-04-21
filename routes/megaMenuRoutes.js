@@ -4,7 +4,9 @@ const {
   getMegaMenus, 
   getMegaMenu, 
   updateMegaMenu, 
-  deleteMegaMenu 
+  deleteMegaMenu,
+  getMegaMenuProducts,
+  getAllMegaMenusWithProducts
 } = require('../controllers/megaMenuController');
 const { protect } = require('../middlewares/auth');
 const multer = require('multer');
@@ -33,10 +35,19 @@ router
   .post(protect, upload.single('pic'), createMegaMenu)
   .get(getMegaMenus);
 
+// Define specific routes before parameterized routes
+router
+  .route('/all/products')
+  .get(getAllMegaMenusWithProducts);
+
 router
   .route('/:id')
   .get(getMegaMenu)
   .put(protect, upload.single('pic'), updateMegaMenu)
   .delete(protect, deleteMegaMenu);
+
+router
+  .route('/:id/products')
+  .get(getMegaMenuProducts);
 
 module.exports = router;

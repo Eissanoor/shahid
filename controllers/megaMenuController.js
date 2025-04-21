@@ -1,4 +1,5 @@
 const MegaMenu = require('../models/MegaMenu');
+const Product = require('../models/Product');
 const cloudinary = require('../config/cloudinary');
 
 // @desc    Create new megamenu item
@@ -186,6 +187,78 @@ exports.deleteMegaMenu = async (req, res) => {
     res.status(200).json({
       success: true,
       message: 'MegaMenu deleted successfully'
+    });
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      error: error.message
+    });
+  }
+};
+
+// @desc    Get products by megaMenu
+// @route   GET /api/megamenu/:id/products
+// @access  Public
+exports.getMegaMenuProducts = async (req, res) => {
+  try {
+    const megaMenu = await MegaMenu.findById(req.params.id);
+
+    if (!megaMenu) {
+      return res.status(404).json({
+        success: false,
+        error: 'MegaMenu not found'
+      });
+    }
+
+    // Find all products associated with this megaMenu
+    const products = await Product.find({ megaMenu: req.params.id });
+
+    res.status(200).json({
+      success: true,
+      count: products.length,
+      data: {
+        megaMenu,
+        products
+      }
+    });
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      error: error.message
+    });
+  }
+};
+
+// @desc    Get all megamenus with all products
+// @route   GET /api/megamenu/all/products
+// @access  Public
+exports.getAllMegaMenusWithProducts = async (req, res) => {
+  try {
+    // Get all megamenus
+    const megaMenus = await MegaMenu.find();
+    
+    // Get all products
+    const products = await Product.find();
+    
+    // Organize products by megaMenu
+    const megaMenusWithProducts = megaMenus.map(megaMenu => {
+      const menuProducts = products.filter(
+        product => product.megaMenu.toString() === megaMenu._id.toString()
+      );
+      
+      return {
+        _id: megaMenu._id,
+        name: megaMenu.name,
+        pic: megaMenu.pic,
+        products: menuProducts
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      count: megaMenus.length,
+      totalProducts: products.length,
+      data: megaMenusWithProducts
     });
   } catch (error) {
     res.status(400).json({
