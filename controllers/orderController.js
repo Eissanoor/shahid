@@ -104,6 +104,60 @@ exports.getOrderById = async (req, res) => {
   }
 };
 
+// @desc    Get order history by period or date range
+// @route   GET /api/orders/history
+// @access  Public
+exports.getOrderHistory = async (req, res) => {
+  try {
+    const { period, start, end } = req.query;
+    let startDate, endDate;
+    const now = new Date();
+
+    if (period === 'day') {
+      startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+    } else if (period === 'week') {
+      // Week starts on Monday
+      const day = now.getDay() || 7;
+      startDate = new Date(now);
+      startDate.setHours(0, 0, 0, 0);
+      startDate.setDate(now.getDate() - day + 1);
+      endDate = new Date(startDate);
+      endDate.setDate(startDate.getDate() + 7);
+    } else if (period === 'month') {
+      startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+      endDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    } else if (start && end) {
+      startDate = new Date(start);
+      endDate = new Date(end);
+      endDate.setDate(endDate.getDate() + 1); // include end day
+    }
+
+    let filter = {};
+    if (startDate && endDate) {
+      filter.createdAt = { $gte: startDate, $lt: endDate };
+    }
+
+    const orders = await Order.find(filter)
+      .sort('-createdAt')
+      .populate({
+        path: 'products.product',
+        select: 'name pic price type'
+      });
+
+    res.status(200).json({
+      success: true,
+      count: orders.length,
+      data: orders
+    });
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      error: error.message
+    });
+  }
+};
+
 // @desc    Get all orders
 // @route   GET /api/orders
 // @access  Public

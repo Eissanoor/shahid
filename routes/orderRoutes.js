@@ -3,7 +3,8 @@ const {
   createOrder,
   getOrderById,
   getAllOrders,
-  deleteOrder
+  deleteOrder,
+  getOrderHistory
 } = require('../controllers/orderController');
 
 const router = express.Router();
@@ -12,6 +13,9 @@ router
   .route('/')
   .post(createOrder)
   .get(getAllOrders);
+
+// Order history by period or date range
+router.get('/history', getOrderHistory);
 
 router
   .route('/:id')
