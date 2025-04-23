@@ -9,6 +9,7 @@ const {
   getAllMegaMenusWithProducts
 } = require('../controllers/megaMenuController');
 const { protect } = require('../middlewares/auth');
+const { cacheMiddleware, clearCache } = require('../middlewares/apicache');
 const multer = require('multer');
 const path = require('path');
 
@@ -32,22 +33,22 @@ const router = express.Router();
 
 router
   .route('/')
-  .post(protect, upload.single('pic'), createMegaMenu)
-  .get(getMegaMenus);
+  .post(protect, clearCache, upload.single('pic'), createMegaMenu)
+  .get(cacheMiddleware('5 minutes'), getMegaMenus);
 
 // Define specific routes before parameterized routes
 router
   .route('/all/products')
-  .get(getAllMegaMenusWithProducts);
+  .get(cacheMiddleware('5 minutes'), getAllMegaMenusWithProducts);
 
 router
   .route('/:id')
-  .get(getMegaMenu)
-  .put(protect, upload.single('pic'), updateMegaMenu)
-  .delete(protect, deleteMegaMenu);
+  .get(cacheMiddleware('5 minutes'), getMegaMenu)
+  .put(protect, clearCache, upload.single('pic'), updateMegaMenu)
+  .delete(protect, clearCache, deleteMegaMenu);
 
 router
   .route('/:id/products')
-  .get(getMegaMenuProducts);
+  .get(cacheMiddleware('5 minutes'), getMegaMenuProducts);
 
 module.exports = router;

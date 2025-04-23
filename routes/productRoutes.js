@@ -8,6 +8,7 @@ const {
   getProductsByMegaMenu
 } = require('../controllers/productController');
 const { protect } = require('../middlewares/auth');
+const { cacheMiddleware, clearCache } = require('../middlewares/apicache');
 const multer = require('multer');
 
 // File filter
@@ -30,17 +31,17 @@ const router = express.Router();
 
 router
   .route('/')
-  .post(protect, upload.single('pic'), createProduct)
-  .get(getProducts);
+  .post(protect, clearCache, upload.single('pic'), createProduct)
+  .get(cacheMiddleware('5 minutes'), getProducts);
 
 router
   .route('/:id')
-  .get(getProduct)
-  .put(protect, upload.single('pic'), updateProduct)
-  .delete(protect, deleteProduct);
+  .get(cacheMiddleware('5 minutes'), getProduct)
+  .put(protect, clearCache, upload.single('pic'), updateProduct)
+  .delete(clearCache, deleteProduct);
 
 router
   .route('/megamenu/:megaMenuId')
-  .get(getProductsByMegaMenu);
+  .get(cacheMiddleware('5 minutes'), getProductsByMegaMenu);
 
 module.exports = router;
