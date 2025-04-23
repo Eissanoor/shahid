@@ -38,8 +38,9 @@ exports.getDashboardStats = async (req, res) => {
     });
 
     // Calculate total revenue from today's orders
-    const revenue = todayOrders.reduce((total, order) => total + order.totalAmount, 0);
-
+    const formattedRevenue = todayOrders.reduce((total, order) => total + order.totalAmount, 0);
+    //revenue formateed like 10,000 . 100,000 like this
+    const revenue = new Intl.NumberFormat('en-US').format(formattedRevenue);
     res.status(200).json({
       success: true,
       data: {
