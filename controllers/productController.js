@@ -63,8 +63,8 @@ exports.getProducts = async (req, res) => {
     // Copy req.query
     const reqQuery = { ...req.query };
     
-    // Fields to exclude
-    const removeFields = ['select', 'sort', 'page', 'limit'];
+    // Fields to exclude (including 'search')
+    const removeFields = ['select', 'sort', 'page', 'limit', 'search'];
     
     // Loop over removeFields and delete them from reqQuery
     removeFields.forEach(param => delete reqQuery[param]);
@@ -75,8 +75,15 @@ exports.getProducts = async (req, res) => {
     // Create operators ($gt, $gte, etc)
     queryStr = queryStr.replace(/\\b(gt|gte|lt|lte|in)\\b/g, match => `$${match}`);
     
-    // Finding resource
-    query = Product.find(JSON.parse(queryStr)).populate('megaMenu', 'name pic');
+    // Finding resource with optional partial search
+    let baseQuery = JSON.parse(queryStr);
+    if (req.query.search) {
+      baseQuery.$or = [
+        { name: { $regex: req.query.search, $options: 'i' } },
+        { description: { $regex: req.query.search, $options: 'i' } }
+      ];
+    }
+    query = Product.find(baseQuery).populate('megaMenu', 'name pic');
     
     // Select Fields
     if (req.query.select) {
@@ -97,7 +104,7 @@ exports.getProducts = async (req, res) => {
     const limit = parseInt(req.query.limit, 10) || 10;
     const startIndex = (page - 1) * limit;
     const endIndex = page * limit;
-    const total = await Product.countDocuments(JSON.parse(queryStr));
+    const total = await Product.countDocuments(baseQuery);
     
     query = query.skip(startIndex).limit(limit);
     
