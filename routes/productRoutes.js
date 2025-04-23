@@ -31,17 +31,17 @@ const router = express.Router();
 
 router
   .route('/')
-  .post(protect, clearCache, upload.single('pic'), createProduct)
-  .get(cacheMiddleware('5 minutes'), getProducts);
+  .post(protect, upload.single('pic'), createProduct)
+  .get( getProducts);
 
 router
   .route('/:id')
-  .get(cacheMiddleware('5 minutes'), getProduct)
-  .put(protect, clearCache, upload.single('pic'), updateProduct)
-  .delete(clearCache, deleteProduct);
+  .get( getProduct)
+  .put(protect,  upload.single('pic'), updateProduct)
+  .delete( deleteProduct);
 
 router
   .route('/megamenu/:megaMenuId')
-  .get(cacheMiddleware('5 minutes'), getProductsByMegaMenu);
+  .get( getProductsByMegaMenu);
 
 module.exports = router;

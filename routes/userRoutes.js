@@ -5,8 +5,8 @@ const { cacheMiddleware, clearCache } = require('../middlewares/apicache');
 
 const router = express.Router();
 
-router.post('/register', clearCache, register);
+router.post('/register',  register);
 router.post('/login', login);
-router.get('/me', protect, cacheMiddleware(), getMe);
+router.get('/me', protect, getMe);
 
 module.exports = router;

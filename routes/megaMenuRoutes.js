@@ -33,22 +33,22 @@ const router = express.Router();
 
 router
   .route('/')
-  .post(protect, clearCache, upload.single('pic'), createMegaMenu)
-  .get(cacheMiddleware('5 minutes'), getMegaMenus);
+  .post(protect,  upload.single('pic'), createMegaMenu)
+  .get(getMegaMenus);
 
 // Define specific routes before parameterized routes
 router
   .route('/all/products')
-  .get(cacheMiddleware('5 minutes'), getAllMegaMenusWithProducts);
+  .get(getAllMegaMenusWithProducts);
 
 router
   .route('/:id')
-  .get(cacheMiddleware('5 minutes'), getMegaMenu)
-  .put(protect, clearCache, upload.single('pic'), updateMegaMenu)
-  .delete(protect, clearCache, deleteMegaMenu);
+  .get(getMegaMenu)
+  .put(protect,  upload.single('pic'), updateMegaMenu)
+  .delete(protect, deleteMegaMenu);
 
 router
   .route('/:id/products')
-  .get(cacheMiddleware('5 minutes'), getMegaMenuProducts);
+  .get(getMegaMenuProducts);
 
 module.exports = router;
