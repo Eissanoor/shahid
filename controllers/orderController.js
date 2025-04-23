@@ -34,6 +34,7 @@ exports.createOrder = async (req, res) => {
       // Add product details to receipt items
       receiptItems.push({
         productId: product._id,
+        orderid: product.orderid,
         name: product.name,
         price: product.price,
         quantity: item.quantity,
@@ -46,7 +47,6 @@ exports.createOrder = async (req, res) => {
     const order = await Order.create({
       products,
       totalAmount,
-      
     });
 
     // Generate receipt data
@@ -56,7 +56,7 @@ exports.createOrder = async (req, res) => {
       items: receiptItems,
       subtotal: totalAmount,
       total: totalAmount,
-     
+      orderid: order.orderid,
       orderStatus: order.status,
       orderReference: order._id
     };

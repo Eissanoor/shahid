@@ -1,6 +1,10 @@
 const mongoose = require('mongoose');
+const AutoIncrement = require('mongoose-sequence')(mongoose);
 
 const OrderSchema = new mongoose.Schema({
+  orderid: {
+    type: Number
+  },
   products: [{
     product: {
       type: mongoose.Schema.Types.ObjectId,
@@ -29,5 +33,7 @@ const OrderSchema = new mongoose.Schema({
     default: Date.now
   }
 });
+
+OrderSchema.plugin(AutoIncrement, { inc_field: 'orderid' });
 
 module.exports = mongoose.model('Order', OrderSchema);
