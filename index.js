@@ -15,6 +15,7 @@ const userRoutes = require('./routes/userRoutes');
 const megaMenuRoutes = require('./routes/megaMenuRoutes');
 const productRoutes = require('./routes/productRoutes');
 const orderRoutes = require('./routes/orderRoutes');
+const dashboardRoutes = require('./routes/dashboardRoutes');
 
 const app = express();
 
@@ -34,6 +35,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/megamenu', megaMenuRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 // Basic route for testing
 app.get('/', (req, res) => {
