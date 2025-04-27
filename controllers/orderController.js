@@ -49,6 +49,11 @@ exports.createOrder = async (req, res) => {
       totalAmount,
     });
 
+    // Increment sales count for each product
+    for (const item of products) {
+      await Product.findByIdAndUpdate(item.product, { $inc: { sales: item.quantity } });
+    }
+
     // Generate receipt data
     const receiptData = {
       receiptNumber: `RCP-${order._id.toString().slice(-6).toUpperCase()}`,

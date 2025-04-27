@@ -24,6 +24,10 @@ const ProductSchema = new mongoose.Schema({
     type: Number,
     required: [true, 'Please add a price']
   },
+  sales: {
+    type: Number,
+    default: 0
+  },
   megaMenu: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'MegaMenu',

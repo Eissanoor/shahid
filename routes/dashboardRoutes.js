@@ -4,7 +4,8 @@ const {
   getTotalProductsCount,
   getMenuItemsCount,
   getOrdersTodayCount,
-  getTodayRevenue
+  getTodayRevenue,
+  getPopularProducts
 } = require('../controllers/dashboardController');
 
 const router = express.Router();
@@ -17,5 +18,8 @@ router.get('/products/count', getTotalProductsCount);
 router.get('/menu-items/count', getMenuItemsCount);
 router.get('/orders/today/count', getOrdersTodayCount);
 router.get('/revenue/today', getTodayRevenue);
+
+// Popular products endpoint
+router.get('/popular-products', getPopularProducts);
 
 module.exports = router;

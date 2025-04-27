@@ -60,6 +60,34 @@ exports.getDashboardStats = async (req, res) => {
 };
 
 /**
+ * @desc    Get popular products
+ * @route   GET /api/dashboard/popular-products
+ * @access  Public
+ */
+exports.getPopularProducts = async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit, 10) || 5;
+    // Aggregate products by sales
+    const popular = await Product.find()
+      .sort('-sales')
+      .limit(limit)
+      .populate({ path: 'megaMenu', select: 'name' });
+
+    res.status(200).json({
+      success: true,
+      data: popular.map(p => ({
+        name: p.name,
+        category: p.megaMenu.name,
+        sales: p.sales
+      }))
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, error: 'Server Error' });
+  }
+};
+
+/**
  * @desc    Get total products count
  * @route   GET /api/dashboard/products/count
  * @access  Public
