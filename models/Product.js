@@ -17,7 +17,7 @@ const ProductSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ['small', 'medium', 'large'],
+    enum: ['small', 'medium', 'large', 'deal'],
     required: [true, 'Please add a type']
   },
   price: {
