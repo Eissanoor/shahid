@@ -7,7 +7,7 @@ const compression = require('compression');
 // Load env vars
 dotenv.config();
 
-// Connect to database
+// Connect to database mongodb
 connectDB();
 
 // Route files
