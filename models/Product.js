@@ -8,8 +8,7 @@ const ProductSchema = new mongoose.Schema({
     maxlength: [100, 'Name cannot be more than 100 characters']
   },
   pic: {
-    type: String,
-    required: [true, 'Please add a picture']
+    type: String
   },
   description: {
     type: String,

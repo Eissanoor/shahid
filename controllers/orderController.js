@@ -6,7 +6,7 @@ const Product = require('../models/Product');
 // @access  Private
 exports.createOrder = async (req, res) => {
   try {
-    const { products } = req.body;
+    const { products, customerName, phoneNumber } = req.body;
 
     if (!products || products.length === 0) {
       return res.status(400).json({
@@ -47,6 +47,8 @@ exports.createOrder = async (req, res) => {
     const order = await Order.create({
       products,
       totalAmount,
+      customerName,
+      phoneNumber
     });
 
     // Increment sales count for each product
@@ -62,6 +64,8 @@ exports.createOrder = async (req, res) => {
       subtotal: totalAmount,
       total: totalAmount,
       orderid: order.orderid,
+      customerName: order.customerName,
+      phoneNumber: order.phoneNumber,
       orderStatus: order.status,
       orderReference: order._id
     };
@@ -209,6 +213,192 @@ exports.deleteOrder = async (req, res) => {
     res.status(200).json({
       success: true,
       message: 'Order deleted successfully'
+    });
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      error: error.message
+    });
+  }
+};
+
+// @desc    Update order
+// @route   PUT /api/orders/:id
+// @access  Private
+exports.updateOrder = async (req, res) => {
+  try {
+    const { products, customerName, phoneNumber, status } = req.body;
+    const orderId = req.params.id;
+    
+    // Find the order
+    let order = await Order.findById(orderId);
+    
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        error: 'Order not found'
+      });
+    }
+    
+    if (products && products.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'No products in order'
+      });
+    }
+    
+    // Calculate total amount and collect product details
+    let totalAmount = order.totalAmount;
+    let receiptItems = [];
+    let updatedProducts = order.products;
+    
+    if (products && products.length > 0) {
+      // Reset total amount
+      totalAmount = 0;
+      updatedProducts = products;
+      
+      // Calculate new total and collect product details
+      for (const item of products) {
+        const product = await Product.findById(item.product);
+        if (!product) {
+          return res.status(404).json({
+            success: false,
+            error: `Product not found: ${item.product}`
+          });
+        }
+        
+        const itemTotal = product.price * item.quantity;
+        totalAmount += itemTotal;
+        
+        // Add product details to receipt items
+        receiptItems.push({
+          productId: product._id,
+          orderid: product.orderid,
+          name: product.name,
+          price: product.price,
+          quantity: item.quantity,
+          type: product.type,
+          itemTotal: itemTotal
+        });
+      }
+      
+      // Update sales count for products
+      for (const item of products) {
+        // We don't increment sales here since this is an update
+        // If needed, you could calculate the difference and update accordingly
+      }
+    } else {
+      // If no products provided, use existing order data for receipt
+      const populatedOrder = await Order.findById(orderId).populate({
+        path: 'products.product',
+        select: 'name price type'
+      });
+      
+      populatedOrder.products.forEach(item => {
+        const itemTotal = item.product.price * item.quantity;
+        receiptItems.push({
+          productId: item.product._id,
+          orderid: item.product.orderid,
+          name: item.product.name,
+          price: item.product.price,
+          quantity: item.quantity,
+          type: item.product.type,
+          itemTotal: itemTotal
+        });
+      });
+    }
+    
+    // Update the order
+    const updatedOrder = await Order.findByIdAndUpdate(
+      orderId,
+      {
+        products: updatedProducts,
+        totalAmount,
+        customerName: customerName !== undefined ? customerName : order.customerName,
+        phoneNumber: phoneNumber !== undefined ? phoneNumber : order.phoneNumber,
+        status: status !== undefined ? status : order.status
+      },
+      { new: true, runValidators: true }
+    );
+    
+    // Generate receipt data
+    const receiptData = {
+      receiptNumber: `RCP-${updatedOrder._id.toString().slice(-6).toUpperCase()}`,
+      date: new Date().toISOString(),
+      items: receiptItems,
+      subtotal: totalAmount,
+      total: totalAmount,
+      orderid: updatedOrder.orderid,
+      customerName: updatedOrder.customerName,
+      phoneNumber: updatedOrder.phoneNumber,
+      orderStatus: updatedOrder.status,
+      orderReference: updatedOrder._id
+    };
+    
+    res.status(200).json({
+      success: true,
+      message: 'Order updated successfully',
+      receipt: receiptData
+    });
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      error: error.message
+    });
+  }
+};
+
+// @desc    Get today's product sales count
+// @route   GET /api/orders/today-sales
+// @access  Public
+exports.getTodaySalesCount = async (req, res) => {
+  try {
+    // Get today's date range
+    const now = new Date();
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+
+    // Find orders created today
+    const todayOrders = await Order.find({
+      createdAt: { $gte: startOfDay, $lt: endOfDay }
+    }).populate({
+      path: 'products.product',
+      select: 'name pic price type'
+    });
+
+    // Calculate total products sold
+    const productSales = {};
+    let totalSales = 0;
+
+    todayOrders.forEach(order => {
+      order.products.forEach(item => {
+        const productId = item.product._id.toString();
+        const productName = item.product.name;
+        const quantity = item.quantity;
+        
+        if (!productSales[productId]) {
+          productSales[productId] = {
+            name: productName,
+            count: 0,
+            productId: productId,
+            type: item.product.type,
+            price: item.product.price
+          };
+        }
+        
+        productSales[productId].count += quantity;
+        totalSales += quantity;
+      });
+    });
+
+    // Convert to array for easier frontend consumption
+    const productSalesArray = Object.values(productSales);
+
+    res.status(200).json({
+      success: true,
+      totalSales,
+      totalOrders: todayOrders.length,
+      products: productSalesArray
     });
   } catch (error) {
     res.status(400).json({

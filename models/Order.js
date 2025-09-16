@@ -5,6 +5,12 @@ const OrderSchema = new mongoose.Schema({
   orderid: {
     type: Number
   },
+  customerName: {
+    type: String
+  },
+  phoneNumber: {
+    type: String
+  },
   products: [{
     product: {
       type: mongoose.Schema.Types.ObjectId,
