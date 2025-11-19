@@ -6,7 +6,7 @@ const Product = require('../models/Product');
 // @access  Private
 exports.createOrder = async (req, res) => {
   try {
-    const { products, customerName, phoneNumber } = req.body;
+    const { products, customerName, phoneNumber, discount = 0 } = req.body;
 
     if (!products || products.length === 0) {
       return res.status(400).json({
@@ -38,17 +38,23 @@ exports.createOrder = async (req, res) => {
         name: product.name,
         price: product.price,
         quantity: item.quantity,
-        type: product.type,
+        productType: product.type,
+        orderType: item.type || 'normal',
         itemTotal: itemTotal
       });
     }
 
+    // Apply discount if provided
+    const discountAmount = discount || 0;
+    const finalAmount = totalAmount - discountAmount;
+    
     // Create order
     const order = await Order.create({
       products,
-      totalAmount,
+      totalAmount: finalAmount,
       customerName,
-      phoneNumber
+      phoneNumber,
+      discount: discountAmount
     });
 
     // Increment sales count for each product
@@ -62,7 +68,8 @@ exports.createOrder = async (req, res) => {
       date: new Date().toISOString(),
       items: receiptItems,
       subtotal: totalAmount,
-      total: totalAmount,
+      discount: discountAmount,
+      total: finalAmount,
       orderid: order.orderid,
       customerName: order.customerName,
       phoneNumber: order.phoneNumber,
@@ -227,7 +234,7 @@ exports.deleteOrder = async (req, res) => {
 // @access  Private
 exports.updateOrder = async (req, res) => {
   try {
-    const { products, customerName, phoneNumber, status } = req.body;
+    const { products, customerName, phoneNumber, status, discount } = req.body;
     const orderId = req.params.id;
     
     // Find the order
@@ -277,7 +284,8 @@ exports.updateOrder = async (req, res) => {
           name: product.name,
           price: product.price,
           quantity: item.quantity,
-          type: product.type,
+          productType: product.type,
+          orderType: item.type || 'normal',
           itemTotal: itemTotal
         });
       }
@@ -302,21 +310,27 @@ exports.updateOrder = async (req, res) => {
           name: item.product.name,
           price: item.product.price,
           quantity: item.quantity,
-          type: item.product.type,
+          productType: item.product.type,
+          orderType: item.type || 'normal',
           itemTotal: itemTotal
         });
       });
     }
+    
+    // Apply discount if provided
+    const discountAmount = discount !== undefined ? discount : order.discount;
+    const finalAmount = totalAmount - discountAmount;
     
     // Update the order
     const updatedOrder = await Order.findByIdAndUpdate(
       orderId,
       {
         products: updatedProducts,
-        totalAmount,
+        totalAmount: finalAmount,
         customerName: customerName !== undefined ? customerName : order.customerName,
         phoneNumber: phoneNumber !== undefined ? phoneNumber : order.phoneNumber,
-        status: status !== undefined ? status : order.status
+        status: status !== undefined ? status : order.status,
+        discount: discountAmount
       },
       { new: true, runValidators: true }
     );
@@ -327,7 +341,8 @@ exports.updateOrder = async (req, res) => {
       date: new Date().toISOString(),
       items: receiptItems,
       subtotal: totalAmount,
-      total: totalAmount,
+      discount: discountAmount,
+      total: finalAmount,
       orderid: updatedOrder.orderid,
       customerName: updatedOrder.customerName,
       phoneNumber: updatedOrder.phoneNumber,

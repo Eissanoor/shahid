@@ -11,6 +11,10 @@ const OrderSchema = new mongoose.Schema({
   phoneNumber: {
     type: String
   },
+  discount: {
+    type: Number,
+    default: 0
+  },
   products: [{
     product: {
       type: mongoose.Schema.Types.ObjectId,
@@ -21,6 +25,11 @@ const OrderSchema = new mongoose.Schema({
       type: Number,
       required: true,
       min: [1, 'Quantity cannot be less than 1']
+    },
+    type: {
+      type: String,
+      enum: ['normal', 'spicy'],
+      default: 'normal'
     }
   }],
   totalAmount: {
